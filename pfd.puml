@@ -1,0 +1,153 @@
+@startuml
+' left to right direction
+
+' Process
+!unquoted procedure $Process($alias, $title, $description="", $size=12, $colour="green")
+rectangle $alias<<Process>> as "
+<color:$colour>$title</color>
+---
+$description"
+!endprocedure
+skinparam rectangle<<Process>> {
+	roundCorner 25
+    BackgroundColor BUSINESS
+}
+
+' Flow
+!unquoted procedure $Flow($src, $dst, $comment="")
+    !if ($comment == "")
+    $src -down[#red,bold]-> $dst
+    !else
+    $src -down[#red,bold]-> $dst: $comment
+!endprocedure
+
+' Delivarable
+!unquoted procedure $Delivarable($alias, $name, $description="")
+    rectangle $alias<<Delivarable>> as "
+    $name
+    !if ($description != "")
+    ===
+    $description
+    !endif
+    "
+!endprocedure
+skinparam rectangle<<Delivarable>> {
+	roundCorner 25
+    BackgroundColor AliceBlue
+}
+
+' Input
+!unquoted procedure $Input($src, $dst, $comment="")
+    !if ($comment == "")
+    $src ..> $dst
+    !else
+    $src ..> $dst: $comment
+!endprocedure
+
+' Output
+!unquoted procedure $Output($src, $dst, $comment="")
+    !if ($comment == "")
+    $src --[#green,dashed]-> $dst
+    !else
+    $src --[#green,dashed]-> $dst: $comment
+!endprocedure
+
+'Requirement
+!unquoted procedure $Requirement($alias, $name, $description="")
+    rectangle $alias<<Requirement>> as "
+    $name
+    !if ($description != "")
+    ===
+    $description
+    !endif
+    "
+!endprocedure
+skinparam rectangle<<Requirement>> {
+	roundCorner 25
+    BackgroundColor MOTIVATION
+}
+
+'---
+rectangle 要求分析フェーズ {
+
+    $Requirement(BuisinessRequirement, "ビジネス要求")
+    $Requirement(UserRequirement, "ユーザー要求")
+    $Requirement(FunctionalRequirement, "機能要求")
+
+    $Process(BuisinessRequirementsAnalysis, "ビジネス要求分析")
+    $Delivarable(VisionScopeStatement, "ビジョンスコープ記述書")
+
+    $Process(UserRequirementsAnalysis, "ユーザー要求分析")
+    $Delivarable(UserRequirementsSpecificaion, "ユーザー要求文書")
+
+    $Process(SoftwareRequirementsAnalysis, "ソフトウェア要求分析")
+    $Delivarable(SoftwareRequirementsSpecificaion, "ソフトウェア要求仕様書")
+
+    $Flow(BuisinessRequirementsAnalysis, UserRequirementsAnalysis)
+    $Flow(UserRequirementsAnalysis, SoftwareRequirementsAnalysis)
+
+    $Input(BuisinessRequirement, BuisinessRequirementsAnalysis)
+    $Input(UserRequirement, UserRequirementsAnalysis)
+    $Input(FunctionalRequirement, SoftwareRequirementsAnalysis)
+
+}
+' ---
+rectangle 開発フェーズ {
+
+    rectangle ProductBacklog {
+        $Delivarable(ProductBacklogItem, "プロダクトバックログアイテム", "Acceptance Criteria")
+        $Delivarable(SPIKE, "スパイク")
+    }
+
+    $Input(UserRequirementsSpecificaion, ProductBacklogItem)
+    $Input(SoftwareRequirementsSpecificaion, ProductBacklogItem)
+    $Input(VisionScopeStatement, ProductBacklogItem)
+
+    $Process(PBLR, "プロダクトバックログリファインメント")
+    $Process(SprintPlanning, "スプリントプランニング")
+    $Process(Sprint, "スプリント")
+    $Process(SprintReview, "スプリントレビュー")
+    $Process(SprintRetrospective, "スプリントレトロスペクティブ")
+    $Process(Release, "リリース")
+
+    $Delivarable(PotentiallyShippableProductIncrement, "出荷可能なインクリメント", "Accesptance Criteria, Definition of Doneを満たしている")
+
+    ' $Flow(SoftwareRequirementsAnalysis, PBLR)
+
+    $Flow(PBLR, SprintPlanning)
+    $Output(PBLR, ProductBacklog, "PBLの並べ替え")
+
+    $Input(ProductBacklogItem, PBLR)
+
+    $Flow(SprintPlanning, Sprint)
+    $Flow(Sprint, SprintReview)
+
+    $Flow(Sprint, SprintRetrospective)
+
+    $Flow(SprintReview, PBLR)
+
+    $Input(ProductBacklog, SprintPlanning)
+    $Input(ProductBacklogItem, Sprint)
+
+    $Output(BuisinessRequirementsAnalysis, VisionScopeStatement, "分析")
+    $Output(UserRequirementsAnalysis, UserRequirementsSpecificaion, "分析")
+    $Output(SoftwareRequirementsAnalysis, SoftwareRequirementsSpecificaion, "分析")
+
+    $Output(PBLR, ProductBacklogItem, "分割/統合/詳細化")
+
+    $Output(SprintPlanning, ProductBacklogItem, "分割/統合")
+    $Output(SprintPlanning, SPIKE)
+
+    $Input(SPIKE, Sprint)
+    $Output(Sprint, ProductBacklogItem, "SPIKEの結果")
+    $Output(Sprint, PotentiallyShippableProductIncrement)
+
+    $Input(PotentiallyShippableProductIncrement, SprintReview)
+
+    $Input(PotentiallyShippableProductIncrement, Release)
+
+}
+
+$Flow(要求分析フェーズ, 開発フェーズ)
+
+@enduml
